@@ -1,6 +1,5 @@
 const express = require("express");
 const session = require("express-session");
-const cors = require("cors");
 
 const authRouter = require("./routes/auth");
 const productsRouter = require("./routes/products");
@@ -8,31 +7,44 @@ const cartRouter = require("./routes/cart");
 
 const app = express();
 
-/** ✅ 1) CORS는 무조건 제일 먼저 */
+/** ✅ 프록시 뒤에 있을 때 필수 (nginx) */
+app.set("trust proxy", 1);
+
+/** ✅ 1) CORS (제일 먼저) */
 const allowed = new Set([
-  "http://192.168.0.122:3000",
   "http://localhost:3000",
+  "http://192.168.0.122:3000",
+  "https://kyorang.shop",
+  "https://www.kyorang.shop",
 ]);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
   if (origin && allowed.has(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Vary", "Origin");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type");
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization"
+    );
   }
 
-  // ✅ preflight는 여기서 바로 종료(핵심)
+  // ✅ preflight 요청은 여기서 종료
   if (req.method === "OPTIONS") return res.sendStatus(204);
+
   next();
 });
 
-/** ✅ 2) 그 다음에 파서/세션 */
+/** ✅ 2) JSON 파서 */
 app.use(express.json());
 
+/** ✅ 3) 세션 */
 app.use(
   session({
     name: "kyorang.sid",
@@ -41,16 +53,17 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: false, // 로컬/IP 개발
-      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production", // ✅ HTTPS에서만
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
 );
 
-/** ✅ 3) 라우터 */
+/** ✅ 4) 라우터 */
 app.use("/auth", authRouter);
 app.use("/products", productsRouter);
 app.use("/cart", cartRouter);
 
 module.exports = app;
+
