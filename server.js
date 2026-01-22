@@ -9,7 +9,6 @@ const app = require("./src/app");
 const PORT = Number(process.env.PORT || 3001);
 const HOST = process.env.HOST || "127.0.0.1";
 
-app.listen(PORT, HOST, () => {
-  console.log(`kyorang-api listening on http://${HOST}:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`kyorang-api listening on PORT ${PORT}`);
 });
-

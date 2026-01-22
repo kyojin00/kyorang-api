@@ -16,6 +16,7 @@ const allowed = new Set([
   "http://192.168.0.122:3000",
   "https://kyorang.shop",
   "https://www.kyorang.shop",
+  "http://127.0.0.1:3000",
 ]);
 
 app.use((req, res, next) => {
@@ -44,6 +45,26 @@ app.use((req, res, next) => {
 /** ✅ 2) JSON 파서 */
 app.use(express.json());
 
+
+// app.use(
+//   session({
+//     name: "kyorang.sid",
+//     secret: "dev-secret-change-me",
+//     resave: false,
+
+//     // 🔥 핵심
+//     saveUninitialized: true,
+
+//     cookie: {
+//       httpOnly: true,
+//       secure: false,        // ❗ 개발환경
+//       sameSite: "lax",      // ❗ 동일 사이트
+//       maxAge: 1000 * 60 * 60 * 24 * 7,
+//     },
+//   })
+// );
+
+
 /** ✅ 3) 세션 */
 app.use(
   session({
@@ -51,14 +72,16 @@ app.use(
     secret: process.env.SESSION_SECRET || "dev-secret-change-me",
     resave: false,
     saveUninitialized: false,
+    proxy: true, // ✅ 추가
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // ✅ HTTPS에서만
+      secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
 );
+
 
 /** ✅ 4) 라우터 */
 app.use("/auth", authRouter);
