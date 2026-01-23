@@ -1,10 +1,9 @@
 const express = require("express");
 const session = require("express-session");
-
 const authRouter = require("./routes/auth");
 const productsRouter = require("./routes/products");
 const cartRouter = require("./routes/cart");
-
+const adminOrdersRouter = require("./routes/adminOrders");
 const app = express();
 
 /** ✅ 프록시 뒤에 있을 때 필수 (nginx) */
@@ -46,25 +45,6 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 
-// app.use(
-//   session({
-//     name: "kyorang.sid",
-//     secret: "dev-secret-change-me",
-//     resave: false,
-
-//     // 🔥 핵심
-//     saveUninitialized: true,
-
-//     cookie: {
-//       httpOnly: true,
-//       secure: false,        // ❗ 개발환경
-//       sameSite: "lax",      // ❗ 동일 사이트
-//       maxAge: 1000 * 60 * 60 * 24 * 7,
-//     },
-//   })
-// );
-
-
 /** ✅ 3) 세션 */
 app.use(
   session({
@@ -82,11 +62,16 @@ app.use(
   })
 );
 
+/** ✅ 4) 주문 */
+const ordersRouter = require("./routes/orders");
 
-/** ✅ 4) 라우터 */
+
+/** ✅ 5) 라우터 */
 app.use("/auth", authRouter);
 app.use("/products", productsRouter);
 app.use("/cart", cartRouter);
+app.use("/orders", ordersRouter);
+app.use("/admin/orders", adminOrdersRouter);
 
 module.exports = app;
 
